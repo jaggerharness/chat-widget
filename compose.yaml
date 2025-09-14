@@ -18,3 +18,8 @@ services:
         - action: sync
           path: .
           target: /app
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: ["npm", "run", "test"]

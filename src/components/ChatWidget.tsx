@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,15 +21,6 @@ const ChatWidget = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -68,7 +59,7 @@ const ChatWidget = () => {
   return (
     <div className="flex flex-col h-dvh max-w-md mx-auto bg-chat-background">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
+      <div role='header' className="flex items-center gap-3 p-4 border-b border-border bg-card">
         <div className="p-2 rounded-full bg-primary">
           <MessageCircle className="w-5 h-5 text-primary-foreground" />
         </div>
@@ -79,7 +70,7 @@ const ChatWidget = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div role='messages' className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -111,7 +102,6 @@ const ChatWidget = () => {
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
@@ -120,10 +110,11 @@ const ChatWidget = () => {
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Type your message..."
             className="flex-1 min-h-[44px] resize-none border-border focus:ring-ring"
             disabled={isTyping}
+            role="textbox"
           />
           <Button
             onClick={handleSendMessage}

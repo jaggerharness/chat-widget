@@ -16,6 +16,11 @@ Production
 docker compose up --build prod
 ```
 
+Test - Container will rm automatically after tests
+```sh
+docker compose run --rm test
+```
+
 Stop Containers
 ```sh
 docker compose down
