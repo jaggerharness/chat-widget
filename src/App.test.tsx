@@ -28,4 +28,16 @@ describe("App Component", () => {
     const messageBox = screen.getByRole("messages");
     expect(messageBox).toHaveTextContent("Hello, AI!");
   });
+
+  it("receives and displays response from backend", async () => {
+    render(<App />);
+
+    const input = screen.getByRole("textbox");
+
+    fireEvent.change(input, { target: { value: "Hello, AI!" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    const messageBox = await screen.findByText("This is an example.", {}, { timeout: 5000 });
+    expect(messageBox).toBeInTheDocument();
+  });
 });

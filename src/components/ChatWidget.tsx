@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,18 +8,24 @@ import { DefaultChatTransport } from 'ai';
 const ChatWidget = () => {
 
   const [inputValue, setInputValue] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: 'http://localhost:3000/api/chat'
-    })
+    }),
+    messages: [
+      { id: 'greeting', role: 'assistant', parts: [{ type: 'text', text: "Hello! I'm your AI assistant. How can I help you today?" }] }
+    ],
+    onError: (error) => {
+      console.error('Chat error:', error);
+    }
   });
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
-    sendMessage({text: inputValue});
-
+    sendMessage({ text: inputValue });
     setInputValue('');
   };
 
@@ -29,6 +35,14 @@ const ChatWidget = () => {
       handleSendMessage();
     }
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
@@ -52,14 +66,14 @@ const ChatWidget = () => {
           >
             <div
               className={`max-w-[80%] px-4 py-3 rounded-2xl ${message.role === 'user'
-                  ? 'bg-chat-user text-chat-user-foreground rounded-br-sm'
-                  : 'bg-chat-assistant text-chat-assistant-foreground rounded-bl-sm'
+                ? 'bg-chat-user text-chat-user-foreground rounded-br-sm'
+                : 'bg-chat-assistant text-chat-assistant-foreground rounded-bl-sm'
                 } shadow-subtle`}
             >
               <p className="text-sm leading-relaxed">{message.parts.map((part, index) =>
                 part.type === 'text' ? <span key={index}>{part.text}</span> : null,
               )}</p>
-              
+
               {/* <span className="text-xs opacity-70 mt-1 block">
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 Timestamp?
@@ -68,7 +82,7 @@ const ChatWidget = () => {
           </div>
         ))}
 
-        {(status === 'submitted' || status === 'streaming') && (
+        {(status === 'submitted') && (
           <div className="flex justify-start animate-fade-in">
             <div className="bg-chat-assistant text-chat-assistant-foreground px-4 py-3 rounded-2xl rounded-bl-sm shadow-subtle">
               <div className="flex space-x-1">
