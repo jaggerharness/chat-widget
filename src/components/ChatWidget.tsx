@@ -6,13 +6,16 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 
 const ChatWidget = () => {
-
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const chatUrl = process.env.NODE_ENV !== 'test'
+    ? 'http://localhost:3000/api/chat'
+    : 'http://localhost:3000/api/chat/test';
+
+  const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      api: 'http://localhost:3000/api/chat'
+      api: chatUrl
     }),
     messages: [
       { id: 'greeting', role: 'assistant', parts: [{ type: 'text', text: "Hello! I'm your AI assistant. How can I help you today?" }] }
