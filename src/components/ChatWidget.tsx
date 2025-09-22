@@ -22,7 +22,7 @@ const ChatWidget = () => {
     ],
     onError: (error) => {
       console.error('Chat error:', error);
-    }
+    },
   });
 
   const handleSendMessage = async () => {
@@ -66,6 +66,7 @@ const ChatWidget = () => {
           <div
             key={message.id}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
+            ref={messagesEndRef}
           >
             <div
               className={`max-w-[80%] px-4 py-3 rounded-2xl ${message.role === 'user'
