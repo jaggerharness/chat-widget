@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import QuizModal from './QuizModal';
 
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState('');
@@ -48,6 +49,7 @@ const ChatWidget = () => {
   }, [messages]);
 
   return (
+    <>
     <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
       {/* Header */}
       <div role='header' className="flex items-center gap-3 p-4 border-b border-border bg-card">
@@ -121,6 +123,8 @@ const ChatWidget = () => {
         </div>
       </div>
     </div>
+    <QuizModal />
+    </>
   );
 };
 
