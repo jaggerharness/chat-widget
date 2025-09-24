@@ -129,6 +129,7 @@ const QuizModal = ({ isOpen, onClose }) => {
   };
 
   const progress = ((currentQuestion + 1) / quizData.quiz.questions.length) * 100;
+  const currentProgress = ((currentQuestion) / quizData.quiz.questions.length) * 100;
   const score = calculateScore();
 
   return (
@@ -146,7 +147,7 @@ const QuizModal = ({ isOpen, onClose }) => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Question {currentQuestion + 1} of {quizData.quiz.questions.length}</span>
-                  <span>{Math.round(progress)}% Complete</span>
+                  <span>{Math.round(currentProgress)}% Complete</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
