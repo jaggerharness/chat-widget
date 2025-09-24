@@ -4,6 +4,13 @@
 
 Demo chatbot application which will utilize Gemini and Vercel AI SDK. Currently, the project is able to generate text responses and generate quizzes based on the user input.
 
+### Prerequisites
+- Docker and Docker Compose
+- Backend API (see setup below)
+
+### Backend Setup
+First, set up the backend API: https://github.com/jaggerharness/chat-widget-backend
+
 **How To Use**
 
 Development
