@@ -9,6 +9,7 @@ import QuizModal from './QuizModal';
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   const chatUrl = process.env.NODE_ENV !== 'test'
     ? 'http://localhost:3000/api/chat'
@@ -50,6 +51,17 @@ const ChatWidget = () => {
 
   return (
     <>
+    <div className="fixed bottom-6 right-6 z-50">
+        {!isQuizOpen && (
+          <Button
+            onClick={() => setIsQuizOpen(true)}
+            className="h-14 w-14 rounded-full bg-primary shadow-button hover:shadow-lg transition-all duration-300 hover:scale-110"
+            size="icon"
+          >
+            Button
+          </Button>
+        )}
+      </div>
     <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
       {/* Header */}
       <div role='header' className="flex items-center gap-3 p-4 border-b border-border bg-card">
@@ -123,7 +135,7 @@ const ChatWidget = () => {
         </div>
       </div>
     </div>
-    <QuizModal />
+    <QuizModal isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} />
     </>
   );
 };
