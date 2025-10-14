@@ -17,7 +17,15 @@ const ChatWidget = () => {
 
   const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      api: chatUrl
+      api: chatUrl,
+      prepareSendMessagesRequest(req) {
+        return {
+          body: {
+            id: req.id,
+            message: req.messages[req.messages.length - 1]
+          }
+        }
+      }
     }),
     messages: [
       { id: 'greeting', role: 'assistant', parts: [{ type: 'text', text: "Hello! I'm your AI assistant. How can I help you today?" }] }
@@ -92,10 +100,6 @@ const ChatWidget = () => {
                 part.type === 'text' ? <span key={index}>{part.text}</span> : null,
               )}</p>
 
-              {/* <span className="text-xs opacity-70 mt-1 block">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                Timestamp?
-              </span> */}
             </div>
           </div>
         ))}
