@@ -188,7 +188,7 @@ const QuizModal = ({ isOpen, onClose, quizData }: { isOpen: boolean; onClose: ()
               <div className="space-y-4">
                 <h3 className="font-semibold text-foreground">Review Your Answers:</h3>
                 {quizData.quiz.questions.map((question, qIndex) => (
-                  <Card className="p-4 bg-secondary border-border">
+                  <Card key={qIndex} className="p-4 bg-secondary border-border">
                     <div className="flex items-start space-x-3">
                       {(question.options[selectedAnswers[qIndex]] === question.correctAnswer) ? (
                         <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />

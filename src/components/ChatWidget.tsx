@@ -7,6 +7,7 @@ import { DefaultChatTransport } from "ai";
 import QuizModal from "./QuizModal";
 import { Quiz } from "@/lib/types";
 import { QuizSchema } from "@/lib/schema";
+import { Streamdown } from 'streamdown';
 
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
@@ -115,13 +116,13 @@ const ChatWidget = () => {
                     : "bg-chat-assistant text-chat-assistant-foreground rounded-bl-sm"
                 } shadow-subtle`}
               >
-                <p className="text-sm leading-relaxed">
+                <div className="text-sm leading-relaxed">
                   {message.parts.map((part, index) =>
                     part.type === "text" ? (
-                      <span key={index}>{part.text}</span>
+                      <Streamdown key={index}>{part.text}</Streamdown>
                     ) : null
                   )}
-                </p>
+                </div>
               </div>
             </div>
           ))}
