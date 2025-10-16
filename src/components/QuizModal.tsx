@@ -1,86 +1,13 @@
 import { useState } from "react";
-import z from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from "@/components/ui/button";
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Quiz } from "@/lib/types";
 
-const QuizSchema = z.object({
-  quiz: z.object({
-    title: z.string().describe("The title of the quiz"),
-    questions: z.array(
-      z.object({
-        question: z.string().describe("The quiz question"),
-        options: z.array(z.string().describe("Multiple choice options - each question should have 4 options")),
-        correctAnswer: z.string().describe("The correct multiple choice answer")
-      })
-    ).describe("Array of quiz questions - the quiz should contain 5 questions")
-  })
-});
-
-type Quiz = z.infer<typeof QuizSchema>
-
-const quizData: Quiz = {
-  quiz: {
-    title: "General Knowledge Quiz",
-    questions: [
-      {
-        question: "What is the capital of Australia?",
-        options: [
-          "Sydney",
-          "Melbourne",
-          "Canberra",
-          "Perth"
-        ],
-        correctAnswer: "Canberra"
-      },
-      {
-        question: "Which planet is known as the 'Red Planet'?",
-        options: [
-          "Venus",
-          "Mars",
-          "Jupiter",
-          "Saturn"
-        ],
-        correctAnswer: "Mars"
-      },
-      {
-        question: "What is the chemical symbol for gold?",
-        options: [
-          "Au",
-          "Ag",
-          "Fe",
-          "Cu"
-        ],
-        correctAnswer: "Au"
-      },
-      {
-        question: "Who painted the Mona Lisa?",
-        options: [
-          "Vincent van Gogh",
-          "Leonardo da Vinci",
-          "Pablo Picasso",
-          "Michelangelo"
-        ],
-        correctAnswer: "Leonardo da Vinci"
-      },
-      {
-        question: "What is the largest ocean on Earth?",
-        options: [
-          "Atlantic Ocean",
-          "Indian Ocean",
-          "Arctic Ocean",
-          "Pacific Ocean"
-        ],
-        correctAnswer: "Pacific Ocean"
-      }
-    ]
-  }
-}
-
-const QuizModal = ({ isOpen, onClose }) => {
+const QuizModal = ({ isOpen, onClose, quizData }: { isOpen: boolean; onClose: () => void; quizData: Quiz | null }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
