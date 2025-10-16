@@ -74,17 +74,6 @@ const ChatWidget = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
-        {!isQuizOpen && (
-          <Button
-            onClick={() => setIsQuizOpen(true)}
-            className="h-14 w-14 rounded-full bg-primary shadow-button hover:shadow-lg transition-all duration-300 hover:scale-110"
-            size="icon"
-          >
-            Button
-          </Button>
-        )}
-      </div>
       <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
         {/* Header */}
         <div
