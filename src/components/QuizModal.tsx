@@ -127,14 +127,14 @@ const QuizModal = ({ isOpen, onClose, quizData }: { isOpen: boolean; onClose: ()
           ) : (
             <div className="space-y-6">
               {/* Score Display */}
-              <Card className="p-8 bg-gradient-to-br from-primary/10 to-secondary/20 border-border/20 text-center relative overflow-hidden">
+              <Card className="p-8 bg-linear-to-br from-primary/10 to-secondary/20 border-border/20 text-center relative overflow-hidden">
                 {/* Background decoration */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-r from-primary/5 to-transparent" />
 
                 <div className="relative z-10">
                   {/* Score badge with animation */}
                   <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/30 mb-4">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                       {score}/{quizData.quiz.questions.length}
                     </div>
                   </div>
@@ -191,9 +191,9 @@ const QuizModal = ({ isOpen, onClose, quizData }: { isOpen: boolean; onClose: ()
                   <Card key={qIndex} className="p-4 bg-secondary border-border">
                     <div className="flex items-start space-x-3">
                       {(question.options[selectedAnswers[qIndex]] === question.correctAnswer) ? (
-                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                        <XCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
                       )}
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground mb-1">
