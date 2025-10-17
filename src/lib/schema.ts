@@ -9,6 +9,6 @@ export const QuizSchema = z.object({
         options: z.array(z.string().describe("Multiple choice options - each question should have 4 options")),
         correctAnswer: z.string().describe("The correct multiple choice answer")
       })
-    ).describe("Array of quiz questions - the quiz should contain 5 questions")
+    ).describe("Array of quiz questions")
   })
 });

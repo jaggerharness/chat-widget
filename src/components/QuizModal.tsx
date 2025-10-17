@@ -61,10 +61,10 @@ const QuizModal = ({ isOpen, onClose, quizData }: { isOpen: boolean; onClose: ()
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] bg-secondary border-border/20">
+      <DialogContent aria-description="Quiz modal content" className="max-w-2xl max-h-[85vh] bg-secondary border-border/20">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {showResults ? 'Quiz Results' : 'Interactive Quiz'}
+            {showResults ? 'Quiz Results' : quizData?.quiz.title}
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(85vh-6rem)] pr-4">

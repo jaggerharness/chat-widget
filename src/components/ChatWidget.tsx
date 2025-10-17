@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import QuizModal from "./QuizModal";
-import { Quiz } from "@/lib/types";
 import { QuizSchema } from "@/lib/schema";
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
+import { Quiz } from "@/lib/types";
 
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [quizData, setQuizData] = useState<Quiz | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
 
   const chatUrl =
     process.env.NODE_ENV !== "test"
@@ -22,14 +22,6 @@ const ChatWidget = () => {
   const { messages, status, sendMessage } = useChat({
     transport: new DefaultChatTransport({
       api: chatUrl,
-      prepareSendMessagesRequest(req) {
-        return {
-          body: {
-            id: req.id,
-            message: req.messages[req.messages.length - 1],
-          },
-        };
-      },
     }),
     messages: [
       {
@@ -43,16 +35,6 @@ const ChatWidget = () => {
         ],
       },
     ],
-    onData: (data) => {
-      if (data.type === "data-quiz") {
-        const quizDataResult = QuizSchema.safeParse(data.data);
-
-        if (quizDataResult.success) {
-          setQuizData(quizDataResult.data);
-          setIsQuizOpen(true);
-        }
-      }
-    },
     onError: (error) => {
       console.error("Chat error:", error);
     },
@@ -70,6 +52,16 @@ const ChatWidget = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleOpenQuiz = (quizData: Quiz) => {
+    setCurrentQuiz(quizData);
+    setIsQuizOpen(true);
+  };
+
+  const handleCloseQuiz = () => {
+    setIsQuizOpen(false);
+    setCurrentQuiz(null);
   };
 
   return (
@@ -106,11 +98,56 @@ const ChatWidget = () => {
                 } shadow-subtle`}
               >
                 <div className="text-sm leading-relaxed">
-                  {message.parts.map((part, index) =>
-                    part.type === "text" ? (
-                      <Streamdown key={index}>{part.text}</Streamdown>
-                    ) : null
-                  )}
+                  {message.parts.map((part, index) => {
+                    if (part.type === "text") {
+                      return <Streamdown key={index}>{part.text}</Streamdown>;
+                    }
+
+                    if (part.type === "tool-generateQuiz") {
+                      switch (part.state) {
+                        case "input-available":
+                          return <div key={index}>Loading quiz...</div>;
+                        case "output-available": {
+                          const output = part.output as { object: unknown };
+                          const parsedQuizResult = QuizSchema.safeParse(
+                            output.object
+                          );
+
+                          if (parsedQuizResult.success) {
+                            const quizObj = parsedQuizResult.data;
+                            return (
+                              <div key={index} className="space-y-2">
+                                <p className="text-sm">
+                                  {`I've created a quiz, ${quizObj.quiz.title}, with
+                                  ${quizObj.quiz.questions.length} questions!`}
+                                </p>
+                                <Button
+                                  onClick={() => handleOpenQuiz(quizObj)}
+                                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-button"
+                                >
+                                  Start Quiz
+                                </Button>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div
+                                key={index}
+                                className="text-destructive text-sm"
+                              >
+                                Failed to create quiz
+                              </div>
+                            );
+                          }
+                        }
+                        case "output-error":
+                          return <div key={index}>Error: {part.errorText}</div>;
+                        default:
+                          return null;
+                      }
+                    }
+                    return null;
+                  })}
                 </div>
               </div>
             </div>
@@ -157,8 +194,12 @@ const ChatWidget = () => {
           </div>
         </div>
       </div>
-      {quizData && (
-        <QuizModal isOpen={isQuizOpen} onClose={() => setIsQuizOpen(false)} quizData={quizData} />
+      {currentQuiz && (
+        <QuizModal
+          isOpen={isQuizOpen}
+          onClose={handleCloseQuiz}
+          quizData={currentQuiz}
+        />
       )}
     </>
   );
