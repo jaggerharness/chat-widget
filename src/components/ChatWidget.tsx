@@ -1,18 +1,28 @@
 import React, { useState } from "react";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import QuizModal from "./QuizModal";
 import { QuizSchema } from "@/lib/schema";
 import { Streamdown } from "streamdown";
 import { Quiz } from "@/lib/types";
+import FileUploadZone from "./FileUploadZone";
+import UploadedFilesList from "./UploadedFilesList";
+
+interface FileWithProgress {
+  file: File;
+  progress: number;
+  status: "pending" | "uploading" | "completed";
+}
 
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<FileWithProgress[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   const chatUrl =
     process.env.NODE_ENV !== "test"
@@ -64,9 +74,63 @@ const ChatWidget = () => {
     setCurrentQuiz(null);
   };
 
+  const handleFilesSelected = (files: File[]) => {
+    const newFiles: FileWithProgress[] = files.map((file) => ({
+      file,
+      progress: 0,
+      status: "pending" as const,
+    }));
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    setShowFileUpload(false);
+  };
+
+  const handleUploadFiles = () => {
+    const pendingFiles = uploadedFiles.filter((f) => f.status === "pending");
+
+    pendingFiles.forEach((fileWithProgress, idx) => {
+      // Set to uploading
+      setUploadedFiles((prev) =>
+        prev.map((f) =>
+          f.file === fileWithProgress.file
+            ? { ...f, status: "uploading" as const }
+            : f
+        )
+      );
+
+      // Simulate upload progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setUploadedFiles((prev) =>
+            prev.map((f) =>
+              f.file === fileWithProgress.file
+                ? { ...f, progress: 100, status: "completed" as const }
+                : f
+            )
+          );
+        } else {
+          setUploadedFiles((prev) =>
+            prev.map((f) =>
+              f.file === fileWithProgress.file ? { ...f, progress } : f
+            )
+          );
+        }
+      }, 300 + idx * 100);
+    });
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const hasPendingFiles = uploadedFiles.some((f) => f.status === "pending");
+
   return (
     <>
-      <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
+      <div className="flex flex-col w-full h-[calc(100vh-4rem)] sm:w-[380px] sm:h-[640px] mx-auto bg-chat-background">
         {/* Header */}
         <div
           role="header"
@@ -172,22 +236,48 @@ const ChatWidget = () => {
           )}
         </div>
 
+        {/* Uploaded Files */}
+        {uploadedFiles.length > 0 && (
+          <UploadedFilesList
+            files={uploadedFiles}
+            onRemoveFile={handleRemoveFile}
+            onUpload={handleUploadFiles}
+            hasPendingFiles={hasPendingFiles}
+          />
+        )}
+
+        {/* File Upload Zone */}
+        {showFileUpload && (
+          <div className="p-4 border-t border-border">
+            <FileUploadZone onFilesSelected={handleFilesSelected} />
+          </div>
+        )}
+
         {/* Input */}
         <div className="p-4 border-t border-border bg-card">
           <div className="flex gap-2 items-end">
-            <Input
+            {/* <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowFileUpload(!showFileUpload)}
+              className="shrink-0 hover:bg-primary/10 hover:text-primary"
+            >
+              <Paperclip className="h-4 w-4 text-muted-foreground" />
+            </Button> */}
+            <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your message..."
-              className="flex-1 min-h-[44px] resize-none border-border focus:ring-ring"
+              className="flex-1 min-h-[40px] max-h-[120px]"
               disabled={status !== "ready"}
               role="textbox"
+              rows={1}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || status !== "ready"}
-              className="h-[44px] w-[44px] p-0 bg-accent hover:bg-accent/90 text-accent-foreground shadow-subtle"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-subtle shrink-0 transition-opacity"
             >
               <Send className="w-4 h-4" />
             </Button>
