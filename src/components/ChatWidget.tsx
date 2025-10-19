@@ -11,9 +11,8 @@ import { Quiz } from "@/lib/types";
 import FileUploadZone from "./FileUploadZone";
 import UploadedFilesList from "./UploadedFilesList";
 
-interface FileWithProgress {
+interface UploadFile {
   file: File;
-  progress: number;
   status: "pending" | "uploading" | "completed";
 }
 
@@ -21,7 +20,7 @@ const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<FileWithProgress[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
 
   const chatUrl =
@@ -40,7 +39,9 @@ const ChatWidget = () => {
         parts: [
           {
             type: "text",
-            text: "Hello! I'm your AI assistant. How can I help you today?",
+            text: `Hello! I'm your AI assistant. Currently, you are able to chat with me 
+              and you can ask me to generate quizzes for you! You can use the file upload 
+              option to upload files that I'll reference when generating your quiz or chatting with you!`,
           },
         ],
       },
@@ -75,51 +76,65 @@ const ChatWidget = () => {
   };
 
   const handleFilesSelected = (files: File[]) => {
-    const newFiles: FileWithProgress[] = files.map((file) => ({
+    const newFiles: UploadFile[] = files.map((file) => ({
       file,
-      progress: 0,
       status: "pending" as const,
     }));
     setUploadedFiles((prev) => [...prev, ...newFiles]);
     setShowFileUpload(false);
   };
 
-  const handleUploadFiles = () => {
-    const pendingFiles = uploadedFiles.filter((f) => f.status === "pending");
+  const handleUploadFiles = async () => {
+    const pendingFiles = uploadedFiles.filter((file) => file.status === "pending");
 
-    pendingFiles.forEach((fileWithProgress, idx) => {
-      // Set to uploading
-      setUploadedFiles((prev) =>
-        prev.map((f) =>
-          f.file === fileWithProgress.file
-            ? { ...f, status: "uploading" as const }
-            : f
+    // Set all pending files to uploading status
+    setUploadedFiles((previousFiles) =>
+      previousFiles.map((file) =>
+        file.status === "pending" ? { ...file, status: "uploading" as const } : file
+      )
+    );
+
+    const formData = new FormData();
+
+    pendingFiles.forEach((fileWrapper) => {
+      formData.append("files", fileWrapper.file);
+    });
+
+    try {
+      const response = await fetch("http://localhost:3000/api/files/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const uploadedFilesResponse = await response.json();
+
+        console.log({uploadedFilesResponse});
+        
+        // Set uploaded files to completed status
+        setUploadedFiles((previousFiles) =>
+          previousFiles.map((file) =>
+            file.status === "uploading" ? { ...file, status: "completed" as const } : file
+          )
+        );
+      } else {
+        // Reset uploading files back to pending on error
+        setUploadedFiles((previousFiles) =>
+          previousFiles.map((file) =>
+            file.status === "uploading" ? { ...file, status: "pending" as const } : file
+          )
+        );
+        console.error("Upload failed:", response.statusText);
+      }
+    } catch (error) {
+      // Reset uploading files back to pending on error
+      setUploadedFiles((previousFiles) =>
+        previousFiles.map((file) =>
+          file.status === "uploading" ? { ...file, status: "pending" as const } : file
         )
       );
-
-      // Simulate upload progress
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 30;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setUploadedFiles((prev) =>
-            prev.map((f) =>
-              f.file === fileWithProgress.file
-                ? { ...f, progress: 100, status: "completed" as const }
-                : f
-            )
-          );
-        } else {
-          setUploadedFiles((prev) =>
-            prev.map((f) =>
-              f.file === fileWithProgress.file ? { ...f, progress } : f
-            )
-          );
-        }
-      }, 300 + idx * 100);
-    });
+      console.error("Upload error:", error);
+    }
   };
 
   const handleRemoveFile = (index: number) => {
@@ -256,14 +271,14 @@ const ChatWidget = () => {
         {/* Input */}
         <div className="p-4 border-t border-border bg-card">
           <div className="flex gap-2 items-end">
-            {/* <Button
+            <Button
               variant="outline"
               size="icon"
               onClick={() => setShowFileUpload(!showFileUpload)}
               className="shrink-0 hover:bg-primary/10 hover:text-primary"
             >
               <Paperclip className="h-4 w-4 text-muted-foreground" />
-            </Button> */}
+            </Button>
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
