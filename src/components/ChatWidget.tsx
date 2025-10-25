@@ -106,11 +106,7 @@ const ChatWidget = () => {
         body: formData,
       });
 
-      if (response.ok) {
-        const uploadedFilesResponse = await response.json();
-
-        console.log({uploadedFilesResponse});
-        
+      if (response.ok) {        
         // Set uploaded files to completed status
         setUploadedFiles((previousFiles) =>
           previousFiles.map((file) =>
