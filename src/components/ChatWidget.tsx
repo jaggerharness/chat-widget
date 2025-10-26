@@ -1,18 +1,27 @@
 import React, { useState } from "react";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import QuizModal from "./QuizModal";
 import { QuizSchema } from "@/lib/schema";
 import { Streamdown } from "streamdown";
 import { Quiz } from "@/lib/types";
+import FileUploadZone from "./FileUploadZone";
+import UploadedFilesList from "./UploadedFilesList";
+
+interface UploadFile {
+  file: File;
+  status: "pending" | "uploading" | "completed";
+}
 
 const ChatWidget = () => {
   const [inputValue, setInputValue] = useState("");
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   const chatUrl =
     process.env.NODE_ENV !== "test"
@@ -30,7 +39,9 @@ const ChatWidget = () => {
         parts: [
           {
             type: "text",
-            text: "Hello! I'm your AI assistant. How can I help you today?",
+            text: `Hello! I'm your AI assistant. Currently, you are able to chat with me 
+              and you can ask me to generate quizzes for you! You can use the file upload 
+              option to upload files that I'll reference when generating your quiz or chatting with you!`,
           },
         ],
       },
@@ -64,9 +75,73 @@ const ChatWidget = () => {
     setCurrentQuiz(null);
   };
 
+  const handleFilesSelected = (files: File[]) => {
+    const newFiles: UploadFile[] = files.map((file) => ({
+      file,
+      status: "pending" as const,
+    }));
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    setShowFileUpload(false);
+  };
+
+  const handleUploadFiles = async () => {
+    const pendingFiles = uploadedFiles.filter((file) => file.status === "pending");
+
+    // Set all pending files to uploading status
+    setUploadedFiles((previousFiles) =>
+      previousFiles.map((file) =>
+        file.status === "pending" ? { ...file, status: "uploading" as const } : file
+      )
+    );
+
+    const formData = new FormData();
+
+    pendingFiles.forEach((fileWrapper) => {
+      formData.append("files", fileWrapper.file);
+    });
+
+    try {
+      const response = await fetch("http://localhost:3000/api/files/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {        
+        // Set uploaded files to completed status
+        setUploadedFiles((previousFiles) =>
+          previousFiles.map((file) =>
+            file.status === "uploading" ? { ...file, status: "completed" as const } : file
+          )
+        );
+      } else {
+        // Reset uploading files back to pending on error
+        setUploadedFiles((previousFiles) =>
+          previousFiles.map((file) =>
+            file.status === "uploading" ? { ...file, status: "pending" as const } : file
+          )
+        );
+        console.error("Upload failed:", response.statusText);
+      }
+    } catch (error) {
+      // Reset uploading files back to pending on error
+      setUploadedFiles((previousFiles) =>
+        previousFiles.map((file) =>
+          file.status === "uploading" ? { ...file, status: "pending" as const } : file
+        )
+      );
+      console.error("Upload error:", error);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const hasPendingFiles = uploadedFiles.some((f) => f.status === "pending");
+
   return (
     <>
-      <div className="flex flex-col h-[calc(100dvh-32px)] max-w-md mx-auto bg-chat-background">
+      <div className="flex flex-col w-full h-[calc(100vh-4rem)] sm:w-[380px] sm:h-[640px] mx-auto bg-chat-background">
         {/* Header */}
         <div
           role="header"
@@ -172,22 +247,48 @@ const ChatWidget = () => {
           )}
         </div>
 
+        {/* Uploaded Files */}
+        {uploadedFiles.length > 0 && (
+          <UploadedFilesList
+            files={uploadedFiles}
+            onRemoveFile={handleRemoveFile}
+            onUpload={handleUploadFiles}
+            hasPendingFiles={hasPendingFiles}
+          />
+        )}
+
+        {/* File Upload Zone */}
+        {showFileUpload && (
+          <div className="p-4 border-t border-border">
+            <FileUploadZone onFilesSelected={handleFilesSelected} />
+          </div>
+        )}
+
         {/* Input */}
         <div className="p-4 border-t border-border bg-card">
           <div className="flex gap-2 items-end">
-            <Input
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowFileUpload(!showFileUpload)}
+              className="shrink-0 hover:bg-primary/10 hover:text-primary"
+            >
+              <Paperclip className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your message..."
-              className="flex-1 min-h-[44px] resize-none border-border focus:ring-ring"
+              className="flex-1 min-h-[40px] max-h-[120px]"
               disabled={status !== "ready"}
               role="textbox"
+              rows={1}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || status !== "ready"}
-              className="h-[44px] w-[44px] p-0 bg-accent hover:bg-accent/90 text-accent-foreground shadow-subtle"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-subtle shrink-0 transition-opacity"
             >
               <Send className="w-4 h-4" />
             </Button>

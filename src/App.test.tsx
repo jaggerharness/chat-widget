@@ -14,7 +14,7 @@ describe("App Component", () => {
     render(<App />);
 
     const messageBox = screen.getByRole("messages");
-    expect(messageBox).toHaveTextContent("Hello! I'm your AI assistant. How can I help you today?");
+    expect(messageBox).toHaveTextContent(`Hello! I'm your AI assistant.`);
   });
 
   it("allows user to send a message", () => {
